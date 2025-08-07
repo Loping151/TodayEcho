@@ -4,7 +4,7 @@ import random
 import io
 import re
 from math import ceil, sqrt
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple, Literal
 
@@ -378,8 +378,10 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
 
     all_records = load_daily_records()
     today_str = datetime.now().strftime('%Y-%m-%d')
+    yesterday_str = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     records_today = all_records.get(today_str, {})
     user_daily_results = records_today.get(user_id, [])
+    del all_records[yesterday_str]
     
     rolls_done = len(user_daily_results)
     rolls_remaining = limit - rolls_done
