@@ -1,0 +1,23 @@
+{
+  "基本功能": {
+    "desc": "梭哈就完了",
+    "data": [
+      {
+        "name": "梭哈",
+        "desc": "梭哈",
+        "eg": "梭哈n次",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "列表",
+        "desc": "列表",
+        "eg": "梭哈结果/梭哈列表",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  }
+}
