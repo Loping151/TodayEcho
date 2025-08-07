@@ -300,7 +300,7 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
     
     # --- Text and Info Drawing (Unchanged) ---
     footer_y_start = base_h
-    draw.text((30, footer_y_start + 25), f"用户: {user_name}", fill=WHITE, font=waves_font_28, anchor="lm")
+    draw.text((30, footer_y_start + 25), f"{user_name}"[:10], fill=WHITE, font=waves_font_28, anchor="lm")
     draw.text((30, footer_y_start + 60), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), fill=GREY, font=waves_font_20, anchor="lm")
     
     tuner_text = f"剩余调谐器: {tuners_remaining * 50}"
@@ -370,6 +370,9 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
 
     if "列表" in ev.text or "结果" in ev.text:
         return
+    cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '两': 2, '俩': 2}
+    for key, value in cn_num_map.items():
+        ev.text = ev.text.replace(key, str(value))
     match = re.search(r'(\d+)', ev.text)
     roll_count = int(match.group(1)) if match and int(match.group(1)) > 0 else 1
 
