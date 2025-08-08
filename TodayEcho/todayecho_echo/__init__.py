@@ -90,7 +90,7 @@ def load_config() -> Dict:
     else:
         default_config = {
             "substats": [
-            {"name": "攻击", "icon": "攻击", "values": [50, 40, 30], "is_percent": False},
+            {"name": "攻击", "icon": "攻击", "values": [60, 50, 40, 30], "is_percent": False},
             {"name": "攻击", "icon": "攻击", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
             {"name": "生命", "icon": "生命", "values": [580, 540, 510, 470, 430, 390, 360, 320], "is_percent": False},
             {"name": "生命", "icon": "生命", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
@@ -397,7 +397,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     limit = config["settings"].get("daily_limit", 20)
     if user_id in config["settings"].get("white_list", []):
         limit *= 10
-    if "列表" in ev.text or "结果" in ev.text:
+    if "列表" in ev.text or "结果" in ev.text or "帮助" in ev.text:
         return
     cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
         '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
