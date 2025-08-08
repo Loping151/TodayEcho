@@ -19,7 +19,7 @@ from gsuid_core.utils.image.convert import convert_img
 # Attempt to import resources from WutheringWavesUID, with a fallback
 try:
     from ....WutheringWavesUID.WutheringWavesUID.utils.fonts.waves_fonts import (
-        waves_font_18, waves_font_20, waves_font_24,
+        waves_font_18, waves_font_20,
         waves_font_28, waves_font_30, waves_font_36,
     )
     from ....WutheringWavesUID.WutheringWavesUID.utils.image import get_attribute_prop, get_footer
@@ -31,7 +31,7 @@ except ImportError:
             return ImageFont.truetype("msyh.ttc", size)
         except IOError:
             return ImageFont.load_default()
-    waves_font_18, waves_font_20, waves_font_24, waves_font_28, waves_font_30, waves_font_36 = [create_font(s) for s in [18, 20, 24, 28, 30, 36]]
+    waves_font_18, waves_font_20, waves_font_28, waves_font_30, waves_font_36 = [create_font(s) for s in [18, 20, 24, 28, 30, 36]]
     async def get_attribute_prop(icon_name: str):
         raise FileNotFoundError(f"Icon {icon_name} not found.")
     def get_footer(color: Literal["white", "black", "hakush"] = "white"):
@@ -39,17 +39,17 @@ except ImportError:
     PREFIX = ""
 
 # --- Service Definitions ---
-sv_gacha_phantom_history = SV("鸣潮声骸历史", priority=10)
-sv_gacha_phantom_action = SV("鸣潮声骸抽取", priority=15)
+sv_gacha_phantom_history = SV("鸣潮声骸历史", priority=5)
+sv_gacha_phantom_action = SV("鸣潮声骸抽取", priority=6)
 
 
 # --- Path Configuration ---
-PLUGIN_PATH = Path(__file__).parent
+PLUGIN_PATH = Path(__file__).parent.parent
 DATA_PATH = get_res_path() / "TodayEcho"
 DATA_PATH.mkdir(exist_ok=True)
 DAILY_RECORD_FILE = DATA_PATH / "daily_gacha_record.json"
-CONFIG_FILE = PLUGIN_PATH / "phantom_substats_config.json"
-TEXT_PATH = PLUGIN_PATH / "help" / "texture2d"
+CONFIG_FILE = PLUGIN_PATH / "todayecho_echo" / "phantom_substats_config.json"
+TEXT_PATH = PLUGIN_PATH / "todayecho_help" / "icon_path"
 TUNER_ICON_PATH = TEXT_PATH / "梭哈.png"
 
 # --- Color Definitions (Wuthering Waves Themed) ---
@@ -106,7 +106,7 @@ def load_config() -> Dict:
                 {"name": "共鸣解放伤害加成", "icon": "共鸣解放伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True}
             ],
             "settings": {
-                "daily_limit": 10, "reset_hour": 0, "stats_count": 5
+                "daily_limit": 20, "reset_hour": 0, "stats_count": 5
             }
         }
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -209,7 +209,12 @@ async def draw_single_result_card(
             img.alpha_composite(placeholder, (70, y_pos))
         
         # Stat Name
-        text_color = ACCENT_GOLD if stat.is_max else WHITE
+        is_double_crit = stat.name in ["暴击", "暴击伤害"]
+
+        if stat.is_max or is_double_crit:
+            text_color = ACCENT_GOLD
+        else:
+            text_color = WHITE
         name_x = 140
         draw.text(
             (name_x, y_pos + 25), stat.name, fill=text_color,
@@ -253,7 +258,7 @@ async def draw_single_result_card(
             )
             # 6. Draw the "MAX" in gold, right next to the star
             draw.text(
-                (tag_start_x + star_width, tag_y), max_text, fill=ACCENT_GOLD,
+                (tag_start_x + star_width, tag_y), max_text, fill=ACCENT_RED,
                 font=tag_font, anchor="lt"  # Anchor left-top
             )
         # --- MODIFICATION END ---
@@ -264,7 +269,6 @@ async def draw_single_result_card(
 async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: int) -> Image.Image:
     """
     Adds a footer with user info and a decoration bar.
-    MODIFIED: Scales down the bar if it's too wide, otherwise keeps original size. Always centers the bar.
     """
     base_w, base_h = base_img.size
     text_area_height = 85
@@ -300,25 +304,29 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
     
     # --- Text and Info Drawing (Unchanged) ---
     footer_y_start = base_h
-    draw.text((30, footer_y_start + 25), f"{user_name}"[:10], fill=WHITE, font=waves_font_28, anchor="lm")
+    user_name = user_name if len(user_name) <= 8 else user_name[:7] + "..."
+    draw.text((30, footer_y_start + 25), f"{user_name}", fill=WHITE, font=waves_font_28, anchor="lm")
     draw.text((30, footer_y_start + 60), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), fill=GREY, font=waves_font_20, anchor="lm")
     
-    tuner_text = f"剩余调谐器: {tuners_remaining * 50}"
+    # --- MODIFIED: 调谐器图标在数量右边 ---
+    tuner_text = f"剩余: {tuners_remaining * 50}"
     tuner_font = waves_font_28
     tuner_text_width = draw.textlength(tuner_text, font=tuner_font)
-    icon_size, padding = 36, 10
-    text_x_pos = base_w - 30
+    icon_size, padding = 36, 8  # 减少padding
     text_y_pos = footer_y_start + text_area_height / 2
     
+    # 先绘制文字（从右边往左算位置）
+    text_x_pos = base_w - 30 - icon_size - padding  # 为图标和间距留空间
+    draw.text((text_x_pos, text_y_pos), tuner_text, fill=WHITE, font=tuner_font, anchor="rm")
+    
+    # 再绘制图标（在文字右边）
     try:
         tuner_icon = Image.open(TUNER_ICON_PATH).convert("RGBA").resize((icon_size, icon_size), Image.Resampling.LANCZOS)
-        icon_x_pos = base_w - 30 - tuner_text_width - padding
+        icon_x_pos = text_x_pos + padding  # 在文字右边
         icon_y_pos = int(footer_y_start + (text_area_height - icon_size) / 2)
         final_img.alpha_composite(tuner_icon, (icon_x_pos, icon_y_pos))
     except Exception as e:
         logger.warning(f"Could not load tuner icon: {e}")
-    
-    draw.text((text_x_pos, text_y_pos), tuner_text, fill=WHITE, font=tuner_font, anchor="rm")
     
     # --- NEW LOGIC: Centered Pasting ---
     deco_bar_y_start = base_h + text_area_height
@@ -366,15 +374,19 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     """Performs one or more Echo gacha rolls. Format: 梭哈 [number]"""
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
     config = load_config()
-    limit = config["settings"].get("daily_limit", 10)
+    limit = config["settings"].get("daily_limit", 20)
 
     if "列表" in ev.text or "结果" in ev.text:
         return
-    cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '两': 2, '俩': 2}
+    cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
+        '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
+        '两': 2, '俩': 2, "①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5, "⑥": 6, "⑦": 7, "⑧": 8, "⑨": 9, "⑩": 10}
     for key, value in cn_num_map.items():
         ev.text = ev.text.replace(key, str(value))
     match = re.search(r'(\d+)', ev.text)
     roll_count = int(match.group(1)) if match and int(match.group(1)) > 0 else 1
+    if (not match or roll_count < 1) and random.random() < 0.2: # 20%概率触发帮助
+        await bot.send(" 梭哈可以跟随次数，如：梭哈5次", at_sender=True)
 
     all_records = load_daily_records()
     today_str = datetime.now().strftime('%Y-%m-%d')
@@ -386,9 +398,9 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     rolls_remaining = limit - rolls_done
     
     if rolls_remaining <= 0:
-        return await bot.send(f"你今天的调谐器已经用完啦！")
+        return await bot.send(f" 你今天的调谐器已经用完啦！", at_sender=True)
     if roll_count > rolls_remaining:
-        return await bot.send(f"你的调谐器不足！剩余调谐器 {rolls_remaining * 50}！")
+        return await bot.send(f" 你的调谐器不足！剩余调谐器 {rolls_remaining * 50}！", at_sender=True)
 
     new_stats_records, image_objects = [], []
     try:
@@ -433,7 +445,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
     user_daily_results = all_records.get(today_str, {}).get(user_id)
 
     if not user_daily_results:
-        return await bot.send("你今天还没有梭哈过声骸呢！")
+        return await bot.send(" 你今天还没有梭哈过声骸呢！", at_sender=True)
 
     try:
         image_objects = []
