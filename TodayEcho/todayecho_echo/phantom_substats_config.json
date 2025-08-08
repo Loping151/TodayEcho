@@ -188,6 +188,9 @@
     ],
     "settings": {
         "daily_limit": 20,
+        "white_list": [
+            "644572093"
+        ],
         "stats_count": 5,
         "max_value_color": [
             255,

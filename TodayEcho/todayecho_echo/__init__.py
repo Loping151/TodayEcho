@@ -47,7 +47,6 @@ sv_gacha_phantom_action = SV("鸣潮声骸抽取", priority=6)
 PLUGIN_PATH = Path(__file__).parent.parent
 DATA_PATH = get_res_path() / "TodayEcho"
 DATA_PATH.mkdir(exist_ok=True)
-DAILY_RECORD_FILE = DATA_PATH / "daily_gacha_record.json"
 CONFIG_FILE = PLUGIN_PATH / "todayecho_echo" / "phantom_substats_config.json"
 TEXT_PATH = PLUGIN_PATH / "todayecho_help" / "icon_path"
 TUNER_ICON_PATH = TEXT_PATH / "梭哈.png"
@@ -91,39 +90,53 @@ def load_config() -> Dict:
     else:
         default_config = {
             "substats": [
-                {"name": "攻击", "icon": "攻击", "values": [50, 40, 30], "is_percent": False},
-                {"name": "攻击", "icon": "攻击", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "生命", "icon": "生命", "values": [580, 540, 510, 470, 430, 390, 360, 320], "is_percent": False},
-                {"name": "生命", "icon": "生命", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "防御", "icon": "防御", "values": [60, 50, 40], "is_percent": False},
-                {"name": "防御", "icon": "防御", "values": [14.7, 13.8, 12.8, 11.8, 10.9, 10.0, 9.0, 8.1], "is_percent": True},
-                {"name": "暴击", "icon": "暴击", "values": [10.5, 9.9, 9.3, 8.7, 8.1, 7.5, 6.9, 6.3], "is_percent": True},
-                {"name": "暴击伤害", "icon": "暴击伤害", "values": [21.0, 19.8, 18.6, 17.4, 16.2, 15.0, 13.8, 12.6], "is_percent": True},
-                {"name": "共鸣效率", "icon": "共鸣效率", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "普攻伤害加成", "icon": "普攻伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "重击伤害加成", "icon": "重击伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "共鸣技能伤害加成", "icon": "共鸣技能伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-                {"name": "共鸣解放伤害加成", "icon": "共鸣解放伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True}
+            {"name": "攻击", "icon": "攻击", "values": [50, 40, 30], "is_percent": False},
+            {"name": "攻击", "icon": "攻击", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "生命", "icon": "生命", "values": [580, 540, 510, 470, 430, 390, 360, 320], "is_percent": False},
+            {"name": "生命", "icon": "生命", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "防御", "icon": "防御", "values": [60, 50, 40], "is_percent": False},
+            {"name": "防御", "icon": "防御", "values": [14.7, 13.8, 12.8, 11.8, 10.9, 10.0, 9.0, 8.1], "is_percent": True},
+            {"name": "暴击", "icon": "暴击", "values": [10.5, 9.9, 9.3, 8.7, 8.1, 7.5, 6.9, 6.3], "is_percent": True},
+            {"name": "暴击伤害", "icon": "暴击伤害", "values": [21.0, 19.8, 18.6, 17.4, 16.2, 15.0, 13.8, 12.6], "is_percent": True},
+            {"name": "共鸣效率", "icon": "共鸣效率", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "普攻伤害加成", "icon": "普攻伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "重击伤害加成", "icon": "重击伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "共鸣技能伤害加成", "icon": "共鸣技能伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
+            {"name": "共鸣解放伤害加成", "icon": "共鸣解放伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True}
             ],
             "settings": {
-                "daily_limit": 20, "reset_hour": 0, "stats_count": 5
+            "daily_limit": 20,
+            "white_list": [
+                "644572093"
+            ],
+            "stats_count": 5,
+            "max_value_color": [
+                255,
+                60,
+                60
+            ],
+            "normal_color": [
+                255,
+                255,
+                255
+            ]
             }
         }
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(default_config, f, ensure_ascii=False, indent=2)
         return default_config
 
-def load_daily_records() -> Dict:
-    if DAILY_RECORD_FILE.exists():
-        with open(DAILY_RECORD_FILE, 'r', encoding='utf-8') as f:
+def load_records(user_id: str) -> Dict:
+    if (DATA_PATH / f'{user_id}.json').exists():
+        with open(DATA_PATH / f'{user_id}.json', 'r', encoding='utf-8') as f:
             try:
                 return json.load(f)
             except json.JSONDecodeError:
                 return {}
     return {}
 
-def save_daily_records(records: Dict):
-    with open(DAILY_RECORD_FILE, 'w', encoding='utf-8') as f:
+def save_records(user_id: str, records: Dict):
+    with open(DATA_PATH / f'{user_id}.json', 'w', encoding='utf-8') as f:
         json.dump(records, f, ensure_ascii=False, indent=2)
 
 def generate_phantom_stats(config: Dict) -> List[PhantomStat]:
@@ -375,7 +388,8 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
     config = load_config()
     limit = config["settings"].get("daily_limit", 20)
-
+    if user_id in config["settings"].get("white_list", []):
+        limit = math.inf
     if "列表" in ev.text or "结果" in ev.text:
         return
     cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
@@ -388,7 +402,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     if (not match or roll_count < 1) and random.random() < 0.2: # 20%概率触发帮助
         await bot.send(" 梭哈可以跟随次数，如：梭哈5次", at_sender=True)
 
-    all_records = load_daily_records()
+    all_records = load_records(user_id)
     today_str = datetime.now().strftime('%Y-%m-%d')
     records_today = all_records.get(today_str, {})
     user_daily_results = records_today.get(user_id, [])
@@ -414,7 +428,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
         # Save records
         records_today.setdefault(user_id, []).extend(new_stats_records)
         all_records[today_str] = records_today
-        save_daily_records(all_records)
+        save_records(user_id, all_records)
         
         final_tuners_remaining = rolls_remaining - roll_count
 
@@ -440,7 +454,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
     config = load_config()
     limit = config["settings"].get("daily_limit", 6)
 
-    all_records = load_daily_records()
+    all_records = load_records(user_id)
     today_str = datetime.now().strftime('%Y-%m-%d')
     user_daily_results = all_records.get(today_str, {}).get(user_id)
 
