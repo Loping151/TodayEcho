@@ -351,6 +351,13 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
         # Fallback solid color bar (already full-width)
         draw.rectangle([0, deco_bar_y_start, base_w, new_height], fill=SEPARATOR_TEAL)
         
+    max_dimension = max(final_img.width, final_img.height)
+    if max_dimension > 5000:
+        scale_ratio = 5000 / max_dimension
+        new_width = int(final_img.width * scale_ratio)
+        new_height = int(final_img.height * scale_ratio)
+        final_img = final_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
     return final_img
 
 
@@ -389,7 +396,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     config = load_config()
     limit = config["settings"].get("daily_limit", 20)
     if user_id in config["settings"].get("white_list", []):
-        limit = math.inf
+        limit *= 10
     if "列表" in ev.text or "结果" in ev.text:
         return
     cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
@@ -452,7 +459,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
     """Displays today's full Echo gacha history."""
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
     config = load_config()
-    limit = config["settings"].get("daily_limit", 6)
+    limit = config["settings"].get("daily_limit", 20)
 
     all_records = load_records(user_id)
     today_str = datetime.now().strftime('%Y-%m-%d')
