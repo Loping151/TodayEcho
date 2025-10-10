@@ -458,8 +458,12 @@ async def show_gacha_history(bot: Bot, ev: Event):
 @sv_gacha_phantom_query.on_command(('梭哈第', '梭哈结果第'), block=True)
 async def query_single_roll(bot: Bot, ev: Event):
     """Queries a specific Echo gacha roll by its number. Format: 梭哈第[number]次"""
-    user_id = str(ev.user_id)
-    match = re.search(r'第(\d+)', ev.text)
+    cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
+        '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
+        '两': 2, '俩': 2, "①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5, "⑥": 6, "⑦": 7, "⑧": 8, "⑨": 9, "⑩": 10}
+    for key, value in cn_num_map.items():
+        ev.text = ev.text.replace(key, str(value))
+    match = re.search(r'(\d+)', ev.text)
     if not match:
         return await bot.send(" 请使用“梭哈第N次”格式查询具体某次梭哈结果", at_sender=True)
     
