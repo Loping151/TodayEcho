@@ -39,8 +39,9 @@ except ImportError:
     PREFIX = ""
 
 # --- Service Definitions ---
-sv_gacha_phantom_history = SV("鸣潮声骸历史", priority=5)
-sv_gacha_phantom_action = SV("鸣潮声骸抽取", priority=6)
+sv_gacha_phantom_history = SV("梭哈历史", priority=5)
+sv_gacha_phantom_query = SV("梭哈查看", priority=4)
+sv_gacha_phantom_action = SV("声骸梭哈", priority=6)
 
 
 # --- Path Configuration ---
@@ -87,44 +88,8 @@ def load_config() -> Dict:
     if CONFIG_FILE.exists():
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
-    else:
-        default_config = {
-            "substats": [
-            {"name": "攻击", "icon": "攻击", "values": [60, 50, 40, 30], "is_percent": False},
-            {"name": "攻击", "icon": "攻击", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "生命", "icon": "生命", "values": [580, 540, 510, 470, 430, 390, 360, 320], "is_percent": False},
-            {"name": "生命", "icon": "生命", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "防御", "icon": "防御", "values": [60, 50, 40], "is_percent": False},
-            {"name": "防御", "icon": "防御", "values": [14.7, 13.8, 12.8, 11.8, 10.9, 10.0, 9.0, 8.1], "is_percent": True},
-            {"name": "暴击", "icon": "暴击", "values": [10.5, 9.9, 9.3, 8.7, 8.1, 7.5, 6.9, 6.3], "is_percent": True},
-            {"name": "暴击伤害", "icon": "暴击伤害", "values": [21.0, 19.8, 18.6, 17.4, 16.2, 15.0, 13.8, 12.6], "is_percent": True},
-            {"name": "共鸣效率", "icon": "共鸣效率", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "普攻伤害加成", "icon": "普攻伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "重击伤害加成", "icon": "重击伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "共鸣技能伤害加成", "icon": "共鸣技能伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True},
-            {"name": "共鸣解放伤害加成", "icon": "共鸣解放伤害加成", "values": [11.6, 10.9, 10.1, 9.4, 8.6, 7.9, 7.1, 6.4], "is_percent": True}
-            ],
-            "settings": {
-            "daily_limit": 20,
-            "white_list": [
-                "644572093"
-            ],
-            "stats_count": 5,
-            "max_value_color": [
-                255,
-                60,
-                60
-            ],
-            "normal_color": [
-                255,
-                255,
-                255
-            ]
-            }
-        }
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(default_config, f, ensure_ascii=False, indent=2)
         return default_config
+    raise FileNotFoundError("配置文件未找到，请确保插件完整安装。")
 
 def load_records(user_id: str) -> Dict:
     if (DATA_PATH / f'{user_id}.json').exists():
@@ -397,7 +362,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     limit = config["settings"].get("daily_limit", 20)
     if user_id in config["settings"].get("white_list", []):
         limit *= 10
-    if "列表" in ev.text or "结果" in ev.text or "帮助" in ev.text:
+    if "列表" in ev.text or "结果" in ev.text or "帮助" in ev.text or "第" in ev.text:
         return
     cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
         '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
@@ -457,6 +422,8 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
 @sv_gacha_phantom_history.on_command(('梭哈结果', '梭哈列表'), block=True)
 async def show_gacha_history(bot: Bot, ev: Event):
     """Displays today's full Echo gacha history."""
+    if "第" in ev.text:
+        return
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
     config = load_config()
     limit = config["settings"].get("daily_limit", 20)
@@ -487,3 +454,33 @@ async def show_gacha_history(bot: Bot, ev: Event):
         await bot.send(final_img_bytes)
     except Exception as e:
         logger.exception(f"Failed to create history image for user {user_id}: {e}")
+
+@sv_gacha_phantom_query.on_command(('梭哈第', '梭哈结果第'), block=True)
+async def query_single_roll(bot: Bot, ev: Event):
+    """Queries a specific Echo gacha roll by its number. Format: 梭哈第[number]次"""
+    user_id = str(ev.user_id)
+    match = re.search(r'第(\d+)', ev.text)
+    if not match:
+        return await bot.send(" 请使用“梭哈第N次”格式查询具体某次梭哈结果", at_sender=True)
+    
+    roll_number = int(match.group(1))
+    if roll_number < 1:
+        return
+
+    all_records = load_records(user_id)
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    user_daily_results = all_records.get(today_str, {}).get(user_id)
+
+    if not user_daily_results or roll_number > len(user_daily_results):
+        return await bot.send(f" 你今天还没有第 {roll_number} 次的梭哈结果呢！", at_sender=True)
+
+    try:
+        stats = [PhantomStat.from_dict(s) for s in user_daily_results[roll_number - 1]]
+        img = await draw_single_result_card(stats, roll_number=roll_number)
+        final_img = await add_footer(img, ev.sender.get("nickname", "Player"), (20 - len(user_daily_results)))
+
+        final_img_bytes = await convert_img(final_img)
+        await bot.send(final_img_bytes)
+    except Exception as e:
+        logger.exception(f"Failed to create single roll image for user {user_id}: {e}")
+        await bot.send(" 生成图片时出错，请稍后再试。", at_sender=True)

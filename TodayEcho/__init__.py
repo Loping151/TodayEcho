@@ -2,4 +2,4 @@
 
 from gsuid_core.sv import Plugins
 
-Plugins(name="TodayEcho", force_prefix=["te"], allow_empty_prefix=False)
+Plugins(name="TodayEcho", force_prefix=["ww"], allow_empty_prefix=False)

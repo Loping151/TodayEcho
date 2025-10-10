@@ -17,6 +17,14 @@
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "查看",
+        "desc": "查看",
+        "eg": "梭哈第n次",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   }
