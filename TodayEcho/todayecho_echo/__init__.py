@@ -16,16 +16,16 @@ from gsuid_core.sv import SV, get_plugin_available_prefix
 from gsuid_core.data_store import get_res_path
 from gsuid_core.utils.image.convert import convert_img
 
-# Attempt to import resources from WutheringWavesUID, with a fallback
+# Attempt to import resources from XutheringWavesUID, with a fallback
 try:
-    from ....WutheringWavesUID.WutheringWavesUID.utils.fonts.waves_fonts import (
+    from ....XutheringWavesUID.XutheringWavesUID.utils.fonts.waves_fonts import (
         waves_font_18, waves_font_20,
         waves_font_28, waves_font_30, waves_font_36,
     )
-    from ....WutheringWavesUID.WutheringWavesUID.utils.image import get_attribute_prop, get_footer
+    from ....XutheringWavesUID.XutheringWavesUID.utils.image import get_attribute_prop, get_footer
     PREFIX = get_plugin_available_prefix("TodayEcho")
 except ImportError:
-    logger.warning("Could not load resources from WutheringWavesUID, using defaults.")
+    logger.warning("Could not load resources from XutheringWavesUID, using defaults.")
     def create_font(size):
         try:
             return ImageFont.truetype("msyh.ttc", size)
@@ -458,6 +458,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
 @sv_gacha_phantom_query.on_command(('梭哈第', '梭哈结果第'), block=True)
 async def query_single_roll(bot: Bot, ev: Event):
     """Queries a specific Echo gacha roll by its number. Format: 梭哈第[number]次"""
+    user_id = str(ev.user_id)
     cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
         '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
         '两': 2, '俩': 2, "①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5, "⑥": 6, "⑦": 7, "⑧": 8, "⑨": 9, "⑩": 10}
