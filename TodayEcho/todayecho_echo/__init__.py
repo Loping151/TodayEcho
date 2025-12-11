@@ -38,6 +38,43 @@ except ImportError:
         raise FileNotFoundError(f"Footer image not found.")
     PREFIX = ""
 
+
+from typing import Dict
+
+from gsuid_core.utils.plugins_config.gs_config import StringConfig
+from gsuid_core.utils.plugins_config.models import (
+    GSC,
+    GsIntConfig,
+    GsListStrConfig
+)
+
+CONFIG_DEFAULT: Dict[str, GSC] = {
+    "WHITELIST": GsListStrConfig(
+        "白名单",
+        "拥有10倍梭哈次数，但超过200次可能无法一次画出",
+        ["644572093"]
+    ),
+    "NTIMES": GsIntConfig(
+        "默认梭哈次数",
+        "默认梭哈次数",
+        20,
+        50
+    )
+}
+
+import sys
+
+from gsuid_core.data_store import get_res_path
+
+MAIN_PATH = get_res_path() / "TodayEcho"
+sys.path.append(str(MAIN_PATH))
+
+# 配置文件
+CONFIG_PATH = MAIN_PATH / "config.json"
+
+TodayEchoConfig = StringConfig("TodayEcho", CONFIG_PATH, CONFIG_DEFAULT)
+
+
 # --- Service Definitions ---
 sv_gacha_phantom_history = SV("梭哈历史", priority=5)
 sv_gacha_phantom_query = SV("梭哈查看", priority=4)
@@ -90,6 +127,8 @@ def load_config() -> Dict:
             return json.load(f)
         return default_config
     raise FileNotFoundError("配置文件未找到，请确保插件完整安装。")
+
+CONFIG = load_config()
 
 def load_records(user_id: str) -> Dict:
     if (DATA_PATH / f'{user_id}.json').exists():
@@ -358,14 +397,14 @@ async def combine_images(images: List[Image.Image]) -> Image.Image:
 async def gacha_phantom_command(bot: Bot, ev: Event):
     """Performs one or more Echo gacha rolls. Format: 梭哈 [number]"""
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
-    config = load_config()
-    limit = config["settings"].get("daily_limit", 20)
-    if user_id in config["settings"].get("white_list", []):
+    limit = TodayEchoConfig.get_config("NTIMES", 20).data
+    if user_id in TodayEchoConfig.get_config("WHITELIST", []).data:
         limit *= 10
     if "列表" in ev.text or "结果" in ev.text or "帮助" in ev.text or "第" in ev.text:
         return
-    cn_num_map = {'零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
+    cn_num_map = {
         '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15, '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20, \
+        '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10, \
         '两': 2, '俩': 2, "①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5, "⑥": 6, "⑦": 7, "⑧": 8, "⑨": 9, "⑩": 10}
     for key, value in cn_num_map.items():
         ev.text = ev.text.replace(key, str(value))
@@ -391,7 +430,7 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
     new_stats_records, image_objects = [], []
     try:
         for i in range(roll_count):
-            stats = generate_phantom_stats(config)
+            stats = generate_phantom_stats(CONFIG)
             new_stats_records.append([s.to_dict() for s in stats])
             
             img = await draw_single_result_card(stats, roll_number=rolls_done + i + 1)
@@ -425,8 +464,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
     if "第" in ev.text:
         return
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
-    config = load_config()
-    limit = config["settings"].get("daily_limit", 20)
+    limit = TodayEchoConfig.get_config("NTIMES", 20).data
 
     all_records = load_records(user_id)
     today_str = datetime.now().strftime('%Y-%m-%d')
