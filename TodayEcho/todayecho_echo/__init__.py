@@ -1,7 +1,7 @@
 import json
 import math
 import random
-import io
+import os
 import re
 from math import ceil, sqrt
 from datetime import datetime, timedelta
@@ -62,12 +62,10 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
     )
 }
 
-import sys
-
 from gsuid_core.data_store import get_res_path
 
 MAIN_PATH = get_res_path() / "TodayEcho"
-sys.path.append(str(MAIN_PATH))
+os.makedirs(MAIN_PATH, exist_ok=True)
 
 # 配置文件
 CONFIG_PATH = MAIN_PATH / "config.json"
