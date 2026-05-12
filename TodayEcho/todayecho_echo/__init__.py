@@ -18,20 +18,20 @@ from gsuid_core.utils.image.convert import convert_img
 
 # Attempt to import resources from XutheringWavesUID, with a fallback
 try:
-    from ....XutheringWavesUID.XutheringWavesUID.utils.fonts.waves_fonts import (
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.fonts.waves_fonts import (
         waves_font_18, waves_font_20,
         waves_font_28, waves_font_30, waves_font_36,
     )
-    from ....XutheringWavesUID.XutheringWavesUID.utils.image import get_attribute_prop, get_footer
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.image import get_attribute_prop, get_footer
     PREFIX = get_plugin_available_prefix("TodayEcho")
 except ImportError:
-    logger.warning("Could not load resources from XutheringWavesUID, using defaults.")
+    logger.warning("[TodayEcho] Could not load resources from XutheringWavesUID, using defaults.")
     def create_font(size):
         try:
             return ImageFont.truetype("msyh.ttc", size)
         except IOError:
             return ImageFont.load_default()
-    waves_font_18, waves_font_20, waves_font_28, waves_font_30, waves_font_36 = [create_font(s) for s in [18, 20, 24, 28, 30, 36]]
+    waves_font_18, waves_font_20, waves_font_28, waves_font_30, waves_font_36 = [create_font(s) for s in [18, 20, 28, 30, 36]]
     async def get_attribute_prop(icon_name: str):
         raise FileNotFoundError(f"Icon {icon_name} not found.")
     def get_footer(color: Literal["white", "black", "hakush"] = "white"):
@@ -218,7 +218,7 @@ async def draw_single_result_card(
             prop_img = await get_attribute_prop(stat.icon)
             img.alpha_composite(prop_img.resize((50, 50)), (70, y_pos))
         except Exception as e:
-            logger.warning(f"Could not load icon {stat.icon}: {e}")
+            logger.warning(f"[TodayEcho] Could not load icon {stat.icon}: {e}")
             placeholder = Image.new("RGBA", (50, 50), (0, 0, 0, 0))
             ImageDraw.Draw(placeholder).ellipse([5, 5, 45, 45], fill=(80, 80, 80, 150))
             img.alpha_composite(placeholder, (70, y_pos))
@@ -307,7 +307,7 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
         deco_bar_height = bar_to_paste.height
 
     except Exception as e:
-        logger.warning(f"Could not load footer decoration bar: {e}. Using a fallback solid bar.")
+        logger.warning(f"[TodayEcho] Could not load footer decoration bar: {e}. Using a fallback solid bar.")
         bar_to_paste = None
         deco_bar_height = 20  # Fallback height for the solid bar
 
@@ -341,7 +341,7 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
         icon_y_pos = int(footer_y_start + (text_area_height - icon_size) / 2)
         final_img.alpha_composite(tuner_icon, (icon_x_pos, icon_y_pos))
     except Exception as e:
-        logger.warning(f"Could not load tuner icon: {e}")
+        logger.warning(f"[TodayEcho] Could not load tuner icon: {e}")
     
     # --- NEW LOGIC: Centered Pasting ---
     deco_bar_y_start = base_h + text_area_height
@@ -391,7 +391,17 @@ async def combine_images(images: List[Image.Image]) -> Image.Image:
     return combined_img
 
 
-@sv_gacha_phantom_action.on_command(('梭哈', '重新梭哈'))
+@sv_gacha_phantom_action.on_command(
+    ('梭哈', '重新梭哈'),
+    to_ai="""鸣潮模拟梭哈声骸（不消耗游戏内资源，纯本地模拟）。
+
+当用户问「梭哈 / 梭哈10次 / 模拟声骸」时调用。每日调谐器有上限（默认 20 次，白名单 10 倍）。
+text 可附数字次数。返回每次梭哈出的声骸主词条/副词条图。
+
+Args:
+    text: 可选次数（阿拉伯数字或中文数字）。例: "5次" / "十次" / "20"。留空默认 1 次。
+""",
+)
 async def gacha_phantom_command(bot: Bot, ev: Event):
     """Performs one or more Echo gacha rolls. Format: 梭哈 [number]"""
     user_id, user_name = str(ev.user_id), ev.sender.get("nickname", "Player")
@@ -451,12 +461,22 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
         
-        logger.info(f"User {user_id}({user_name}) performed {roll_count} roll(s)")
+        logger.info(f"[TodayEcho] User {user_id}({user_name}) performed {roll_count} roll(s)")
     except Exception as e:
-        logger.exception(f"Failed to process Echo roll: {e}")
+        logger.exception(f"[TodayEcho] Failed to process Echo roll: {e}")
 
 
-@sv_gacha_phantom_history.on_command(('梭哈结果', '梭哈列表'), block=True)
+@sv_gacha_phantom_history.on_command(
+    ('梭哈结果', '梭哈列表'),
+    block=True,
+    to_ai="""查看自己今天已经梭哈过的全部声骸结果列表图。
+
+当用户问「我今天梭哈了什么 / 梭哈列表 / 看下梭哈结果」时调用。
+
+Args:
+    text: 无需参数，留空即可。
+""",
+)
 async def show_gacha_history(bot: Bot, ev: Event):
     """Displays today's full Echo gacha history."""
     if "第" in ev.text:
@@ -489,9 +509,20 @@ async def show_gacha_history(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
     except Exception as e:
-        logger.exception(f"Failed to create history image for user {user_id}: {e}")
+        logger.exception(f"[TodayEcho] Failed to create history image for user {user_id}: {e}")
 
-@sv_gacha_phantom_query.on_command(('梭哈第', '梭哈结果第'), block=True)
+@sv_gacha_phantom_query.on_command(
+    ('梭哈第', '梭哈结果第'),
+    block=True,
+    to_ai="""查看自己今天某一次具体的梭哈结果。
+
+当用户问「看下梭哈第3次 / 我第5次梭哈是啥」时调用。
+text 是次数数字（阿拉伯或中文）后跟可选 "次"。
+
+Args:
+    text: 例: "3" / "三次" / "5次"。
+""",
+)
 async def query_single_roll(bot: Bot, ev: Event):
     """Queries a specific Echo gacha roll by its number. Format: 梭哈第[number]次"""
     user_id = str(ev.user_id)
@@ -523,5 +554,5 @@ async def query_single_roll(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
     except Exception as e:
-        logger.exception(f"Failed to create single roll image for user {user_id}: {e}")
+        logger.exception(f"[TodayEcho] Failed to create single roll image for user {user_id}: {e}")
         await bot.send(" 生成图片时出错，请稍后再试。", at_sender=True)

@@ -6,7 +6,11 @@ from PIL import Image
 from gsuid_core.sv import get_plugin_available_prefix
 from gsuid_core.help.draw_new_plugin_help import get_new_help
 from gsuid_core.help.model import PluginHelp
-from ....XutheringWavesUID.XutheringWavesUID.utils.image import get_footer
+try:
+    from plugins.XutheringWavesUID.XutheringWavesUID.utils.image import get_footer
+except ImportError:
+    def get_footer(color="white"):
+        return None
 from ..version import TodayEchoVersion
 
 ICON = Path(__file__).parent.parent.parent / "ICON.png"
