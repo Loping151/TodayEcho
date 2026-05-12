@@ -10,7 +10,16 @@ from .get_help import ICON, get_help
 sv_rover_help = SV("TodayEcho帮助")
 
 
-@sv_rover_help.on_fullmatch("梭哈帮助")
+@sv_rover_help.on_fullmatch(
+    "梭哈帮助",
+    to_ai="""返回 TodayEcho（鸣潮声骸梭哈模拟器）插件的命令帮助图。
+
+当用户问「梭哈帮助 / 模拟梭哈怎么用 / today echo help」时调用。
+
+Args:
+    text: 无需参数。
+""",
+)
 async def send_help_img(bot: Bot, ev: Event):
     await bot.send(await get_help(ev.user_pm))
 
