@@ -25,7 +25,7 @@ try:
     from plugins.XutheringWavesUID.XutheringWavesUID.utils.image import get_attribute_prop, get_footer
     PREFIX = get_plugin_available_prefix("TodayEcho")
 except ImportError:
-    logger.warning("[TodayEcho] Could not load resources from XutheringWavesUID, using defaults.")
+    logger.warning("[梭哈·插件] Could not load resources from XutheringWavesUID, using defaults.")
     def create_font(size):
         try:
             return ImageFont.truetype("msyh.ttc", size)
@@ -218,7 +218,7 @@ async def draw_single_result_card(
             prop_img = await get_attribute_prop(stat.icon)
             img.alpha_composite(prop_img.resize((50, 50)), (70, y_pos))
         except Exception as e:
-            logger.warning(f"[TodayEcho] Could not load icon {stat.icon}: {e}")
+            logger.warning(f"[梭哈·插件] Could not load icon {stat.icon}: {e}")
             placeholder = Image.new("RGBA", (50, 50), (0, 0, 0, 0))
             ImageDraw.Draw(placeholder).ellipse([5, 5, 45, 45], fill=(80, 80, 80, 150))
             img.alpha_composite(placeholder, (70, y_pos))
@@ -307,7 +307,7 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
         deco_bar_height = bar_to_paste.height
 
     except Exception as e:
-        logger.warning(f"[TodayEcho] Could not load footer decoration bar: {e}. Using a fallback solid bar.")
+        logger.warning(f"[梭哈·插件] Could not load footer decoration bar: {e}. Using a fallback solid bar.")
         bar_to_paste = None
         deco_bar_height = 20  # Fallback height for the solid bar
 
@@ -341,7 +341,7 @@ async def add_footer(base_img: Image.Image, user_name: str, tuners_remaining: in
         icon_y_pos = int(footer_y_start + (text_area_height - icon_size) / 2)
         final_img.alpha_composite(tuner_icon, (icon_x_pos, icon_y_pos))
     except Exception as e:
-        logger.warning(f"[TodayEcho] Could not load tuner icon: {e}")
+        logger.warning(f"[梭哈·插件] Could not load tuner icon: {e}")
     
     # --- NEW LOGIC: Centered Pasting ---
     deco_bar_y_start = base_h + text_area_height
@@ -461,9 +461,9 @@ async def gacha_phantom_command(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
         
-        logger.info(f"[TodayEcho] User {user_id}({user_name}) performed {roll_count} roll(s)")
+        logger.info(f"[梭哈·插件] User {user_id}({user_name}) performed {roll_count} roll(s)")
     except Exception as e:
-        logger.exception(f"[TodayEcho] Failed to process Echo roll: {e}")
+        logger.exception(f"[梭哈·插件] Failed to process Echo roll: {e}")
 
 
 @sv_gacha_phantom_history.on_command(
@@ -509,7 +509,7 @@ async def show_gacha_history(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
     except Exception as e:
-        logger.exception(f"[TodayEcho] Failed to create history image for user {user_id}: {e}")
+        logger.exception(f"[梭哈·插件] Failed to create history image for user {user_id}: {e}")
 
 @sv_gacha_phantom_query.on_command(
     ('梭哈第', '梭哈结果第'),
@@ -554,5 +554,5 @@ async def query_single_roll(bot: Bot, ev: Event):
         final_img_bytes = await convert_img(final_img)
         await bot.send(final_img_bytes)
     except Exception as e:
-        logger.exception(f"[TodayEcho] Failed to create single roll image for user {user_id}: {e}")
+        logger.exception(f"[梭哈·插件] Failed to create single roll image for user {user_id}: {e}")
         await bot.send(" 生成图片时出错，请稍后再试。", at_sender=True)
