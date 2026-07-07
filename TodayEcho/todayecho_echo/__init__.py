@@ -149,7 +149,8 @@ def generate_phantom_stats(config: Dict) -> List[PhantomStat]:
     
     stats = []
     for stat_config in selected_configs:
-        value = random.choice(stat_config["values"])
+        weights = stat_config.get("weights")
+        value = random.choices(stat_config["values"], weights=weights)[0]
         is_max = (value == max(stat_config["values"]))
         stats.append(PhantomStat(
             name=stat_config["name"], icon=stat_config["icon"], value=value,
