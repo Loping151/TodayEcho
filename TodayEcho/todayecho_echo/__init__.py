@@ -394,6 +394,7 @@ async def combine_images(images: List[Image.Image]) -> Image.Image:
 
 @sv_gacha_phantom_action.on_command(
     ('梭哈', '重新梭哈'),
+    block=True,
     to_ai="""鸣潮模拟梭哈声骸（不消耗游戏内资源，纯本地模拟）。
 
 当用户问「梭哈 / 梭哈10次 / 模拟声骸」时调用。每日调谐器有上限（默认 20 次，白名单 10 倍）。
